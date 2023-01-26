@@ -1,9 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import './App.css'
+import { io, Socket } from "socket.io-client";
 
 function App() {
   const [count, setCount] = useState(0)
+  const socket:Socket<ServerToClientEvents, ClientToServerEvents>= io("http://localhost:3000");
+
+  useEffect(() => {
+
+    socket.on("connect", (socket) => {
+      console.log("my id is ", socket.id) 
+    })
+  }, [])
 
   return (
     <div className="App">
