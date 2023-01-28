@@ -1,12 +1,19 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, { cors: { origin: "*"} });
+const io = new Server(httpServer, { 
+  cors: { origin: "*"},
+});
 
 io.on("connection", (socket) => {
+  console.log(`Connected ID: ${socket.id}`);
+  socket.on("message", (data) => {
+    socket.broadcast.emit("receiveMessage", data);
+  });
 
 });
 
