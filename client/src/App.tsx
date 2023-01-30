@@ -1,6 +1,4 @@
 import { useState, useEffect, FormEventHandler } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
 import { io, Socket } from "socket.io-client";
 
 interface ServerToClientEvents {
@@ -12,17 +10,12 @@ interface ServerToClientEvents {
 
 interface ClientToServerEvents {
   hello: () => void;
-  message: (arg: string) => void;
-  receivemessage: (arg: string) => void;
+  message: (message: string) => void;
+  receivemessage: (message: string) => void;
 }
 
 interface InterServerEvents {
   ping: () => void;
-}
-
-interface SocketData {
-  name: string;
-  age: number;
 }
 
 
@@ -30,13 +23,13 @@ function App() {
   const [socketId, setSocketId] = useState("");
   const [message, setMessage] = useState("");
   const socket:Socket<ServerToClientEvents, ClientToServerEvents>= io("http://localhost:3000");
-  console.log("id", socketId);
 
   useEffect(() => {
+
     socket.on("connect", () => {
-      console.log("my id is ", socket.id) 
       setSocketId(socket.id);
     })
+
     socket.on("receiveMessage", (data) => {
       const messagesElem = document.querySelector(".messages");
       const newMessageElem = document.createElement("p");
@@ -50,6 +43,7 @@ function App() {
       socket.off("connect");
       socket.off("receiveMessage");
     }
+
   }, [])
 
   const handleSendMessage: FormEventHandler<HTMLFormElement> = (e) => {
@@ -59,15 +53,16 @@ function App() {
   }
 
   return (
-    <div className="App">
-
+    <div className="flex flex-col w-screen">
       <header>
         Room Id: {socketId}
       </header>
-
-      <div className="messages"/>
+      <div className="messages 
+        overflow-auto
+        border-black border-2
+        h-72 w-full" />
       <form onSubmit={handleSendMessage}>
-        <input type="text" value={message} onChange={(e) => setMessage(e.target.value)}/>
+        <input className="border-black border-2 rounded" type="text" value={message} onChange={(e) => setMessage(e.target.value)}/>
       </form>
     </div>
   )
