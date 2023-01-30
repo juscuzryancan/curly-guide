@@ -10,11 +10,9 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-  console.log(`Connected ID: ${socket.id}`);
   socket.on("message", (data) => {
     socket.broadcast.emit("receiveMessage", data);
   });
-
 });
 
 httpServer.listen(3000);
