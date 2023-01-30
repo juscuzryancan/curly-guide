@@ -1,41 +1,69 @@
-import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useState, useEffect, FormEventHandler } from 'react'
 import { io, Socket } from "socket.io-client";
 
+interface ServerToClientEvents {
+  noArg: () => void;
+  basicEmit: (a: number, b: string, c: Buffer) => void;
+  withAck: (d: string, callback: (e: number) => void) => void;
+  receiveMessage: (message: string) => void;
+}
+
+interface ClientToServerEvents {
+  hello: () => void;
+  message: (message: string) => void;
+  receivemessage: (message: string) => void;
+}
+
+interface InterServerEvents {
+  ping: () => void;
+}
+
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [socketId, setSocketId] = useState("");
+  const [message, setMessage] = useState("");
   const socket:Socket<ServerToClientEvents, ClientToServerEvents>= io("http://localhost:3000");
 
   useEffect(() => {
 
-    socket.on("connect", (socket) => {
-      console.log("my id is ", socket.id) 
+    socket.on("connect", () => {
+      setSocketId(socket.id);
     })
+
+    socket.on("receiveMessage", (data) => {
+      const messagesElem = document.querySelector(".messages");
+      const newMessageElem = document.createElement("p");
+      newMessageElem.innerText = data;
+      if (messagesElem) {
+        messagesElem.append(newMessageElem);
+      }
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("receiveMessage");
+    }
+
   }, [])
 
+  const handleSendMessage: FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+    socket.emit("message", message);
+    setMessage("");
+  }
+
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <div className="flex flex-col w-screen">
+      <header>
+        Room Id: {socketId}
+      </header>
+      <div className="messages 
+        overflow-auto
+        border-black border-2
+        h-72 w-full" />
+      <form onSubmit={handleSendMessage}>
+        <input className="border-black border-2 rounded" type="text" value={message} onChange={(e) => setMessage(e.target.value)}/>
+      </form>
     </div>
   )
 }
